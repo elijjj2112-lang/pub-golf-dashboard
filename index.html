@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>Pub Golf Project Dashboard</title>
+   <script src="https://cdn.tailwindcss.com"></script>
+   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+   <style>
+       body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+       .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+       .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+       .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+       .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+   </style>
+</head>
+<body class="p-4 md:p-8 text-gray-800">
+
+
+   <div class="max-w-7xl mx-auto">
+       <header class="mb-8 flex flex-col md:flex-row justify-between items-center gap-4">
+           <div>
+               <h1 class="text-3xl font-bold text-indigo-900"><i class="fa-solid fa-beer-mug-empty mr-2 text-indigo-600"></i>Pub Golf Inter-Campus</h1>
+               <p class="text-gray-500">Project Management & Financial Dashboard</p>
+           </div>
+           <div class="flex gap-4">
+               <div class="bg-white px-6 py-3 rounded-xl shadow-sm border border-gray-100 text-center">
+                   <p class="text-xs text-gray-500 font-semibold uppercase tracking-wider">Net Profit</p>
+                   <p id="netProfitDisplay" class="text-2xl font-bold text-emerald-600">€0</p>
+               </div>
+           </div>
+       </header>
+
+
+       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          
+           <!-- Charts Section (Takes up 2 columns on large screens) -->
+           <div class="lg:col-span-2 space-y-6">
+               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                   <!-- Donut Chart: Necessities vs Non-Necessities -->
+                   <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col items-center justify-center">
+                       <h3 class="text-lg font-semibold text-gray-700 mb-4 self-start">Expense Breakdown</h3>
+                       <div class="w-full h-48 relative">
+                           <canvas id="necessityChart"></canvas>
+                       </div>
+                   </div>
+                  
+                   <!-- Summary Stats Card -->
+                   <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between">
+                       <h3 class="text-lg font-semibold text-gray-700 mb-4">Financial Overview</h3>
+                       <div class="space-y-4">
+                           <div class="flex justify-between items-center border-b pb-2">
+                               <span class="text-gray-600">Total Income</span>
+                               <span id="totalIncomeDisplay" class="font-bold text-emerald-600">€0</span>
+                           </div>
+                           <div class="flex justify-between items-center border-b pb-2">
+                               <span class="text-gray-600">Total Expenses</span>
+                               <span id="totalExpenseDisplay" class="font-bold text-red-500">€0</span>
+                           </div>
+                           <div class="flex justify-between items-center pt-2">
+                               <span class="text-gray-600 text-sm">ROI (Return on Investment)</span>
+                               <span id="roiDisplay" class="font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded">0%</span>
+                           </div>
+                       </div>
+                   </div>
+               </div>
+
+
+               <!-- Bar Chart: Category Breakdown -->
+               <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                   <h3 class="text-lg font-semibold text-gray-700 mb-4">Cash Flow by Category</h3>
+                   <div class="w-full h-64">
+                       <canvas id="categoryChart"></canvas>
+                   </div>
+               </div>
+           </div>
+
+
+           <!-- Ledger Section -->
+           <div class="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col h-full max-h-[600px]">
+               <div class="p-6 border-b border-gray-100">
+                   <h3 class="text-lg font-semibold text-gray-700 mb-2">Financial Ledger</h3>
+                  
+                   <!-- Add Transaction Form -->
+                   <form id="addTransactionForm" class="space-y-3 bg-gray-50 p-4 rounded-lg">
+                       <div class="flex gap-2">
+                           <select id="transType" class="flex-1 rounded border-gray-300 shadow-sm p-2 text-sm focus:ring-indigo-500 focus:border-indigo-500">
+                               <option value="income">Income</option>
+                               <option value="expense">Expense</option>
+                           </select>
+                           <input type="number" id="transAmount" placeholder="Amount (€)" required class="flex-1 rounded border-gray-300 shadow-sm p-2 text-sm focus:ring-indigo-500 focus:border-indigo-500">
+                       </div>
+                       <input type="text" id="transDesc" placeholder="Description" required class="w-full rounded border-gray-300 shadow-sm p-2 text-sm focus:ring-indigo-500 focus:border-indigo-500">
+                       <div class="flex gap-2 items-center">
+                           <select id="transCategory" class="flex-1 rounded border-gray-300 shadow-sm p-2 text-sm focus:ring-indigo-500 focus:border-indigo-500">
+                               <option value="Logistics">Logistics</option>
+                               <option value="Marketing">Marketing</option>
+                               <option value="Legal">Legal</option>
+                               <option value="F&B">F&B</option>
+                               <option value="Merch">Merch</option>
+                               <option value="Ticketing">Ticketing</option>
+                           </select>
+                           <label class="flex items-center text-sm text-gray-600 gap-1" id="necessityLabel">
+                               <input type="checkbox" id="transNecessity" class="rounded text-indigo-600" checked>
+                               Necessity
+                           </label>
+                           <button type="submit" class="bg-indigo-600 text-white px-3 py-2 rounded text-sm hover:bg-indigo-700 transition"><i class="fa-solid fa-plus"></i></button>
+                       </div>
+                   </form>
+               </div>
+              
+               <!-- Transaction List -->
+               <div class="flex-1 overflow-y-auto p-4 custom-scrollbar space-y-3" id="transactionList">
+                   <!-- Transactions will be injected here by JS -->
+               </div>
+           </div>
+       </div>
+
+
+       <!-- Task Board Section -->
+       <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+           <div class="flex justify-between items-center mb-6">
+               <h3 class="text-xl font-semibold text-gray-700">Project Task Board</h3>
+               <form id="addTaskForm" class="flex gap-2">
+                   <input type="text" id="newTaskDesc" placeholder="New task..." required class="rounded border-gray-300 shadow-sm p-2 text-sm w-64 focus:ring-indigo-500 focus:border-indigo-500">
+                   <select id="newTaskPhase" class="rounded border-gray-300 shadow-sm p-2 text-sm focus:ring-indigo-500 focus:border-indigo-500">
+                       <option value="Concept">Concept</option>
+                       <option value="Legal">Legal</option>
+                       <option value="Logistics">Logistics</option>
+                       <option value="Event Day">Event Day</option>
+                   </select>
+                   <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded text-sm hover:bg-indigo-700 transition">Add</button>
+               </form>
+           </div>
+          
+           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" id="taskColumns">
+               <!-- Columns injected by JS -->
+           </div>
+       </div>
+   </div>
+
+
+   <script>
+       // --- State Management ---
+       let state = {
+           transactions: [
+               { id: 1, type: 'income', amount: 12000, desc: 'Online Presales', category: 'Ticketing', necessity: true },
+               { id: 2, type: 'income', amount: 2400, desc: 'Bar Sponsorships', category: 'F&B', necessity: true },
+               { id: 3, type: 'expense', amount: 450, desc: 'Event Insurance', category: 'Legal', necessity: true },
+               { id: 4, type: 'expense', amount: 350, desc: 'Bingo Cards Print', category: 'Logistics', necessity: true },
+               { id: 5, type: 'expense', amount: 2000, desc: 'Beer Kegs', category: 'F&B', necessity: true },
+               { id: 6, type: 'expense', amount: 1200, desc: 'Merch Inventory', category: 'Merch', necessity: false },
+               { id: 7, type: 'expense', amount: 2000, desc: 'Big Prizes (DJ, Trip)', category: 'Marketing', necessity: false }
+           ],
+           tasks: [
+               { id: 1, desc: 'Submit Mairie Authorization', phase: 'Legal', done: false },
+               { id: 2, desc: 'Secure Liability Insurance', phase: 'Legal', done: true },
+               { id: 3, desc: 'Pitch Kraken & Barberousse', phase: 'Concept', done: true },
+               { id: 4, desc: 'Order Eco-Cups', phase: 'Logistics', done: false },
+               { id: 5, desc: 'Setup Presale Booth', phase: 'Event Day', done: false }
+           ]
+       };
+
+
+       // Chart instances
+       let necessityChartInstance = null;
+       let categoryChartInstance = null;
+
+
+       // --- DOM Elements ---
+       const netProfitDisplay = document.getElementById('netProfitDisplay');
+       const totalIncomeDisplay = document.getElementById('totalIncomeDisplay');
+       const totalExpenseDisplay = document.getElementById('totalExpenseDisplay');
+       const roiDisplay = document.getElementById('roiDisplay');
+      
+       const transTypeInput = document.getElementById('transType');
+       const necessityLabel = document.getElementById('necessityLabel');
+
+
+      
+       // Hide necessity checkbox if Income is selected (income is neither necessary nor unnecessary, it's just revenue)
+       transTypeInput.addEventListener('change', (e) => {
+           necessityLabel.style.display = e.target.value === 'income' ? 'none' : 'flex';
+       });
+
+
+       // Add Transaction
+       document.getElementById('addTransactionForm').addEventListener('submit', (e) => {
+           e.preventDefault();
+           const newTrans = {
+               id: Date.now(),
+               type: document.getElementById('transType').value,
+               amount: parseFloat(document.getElementById('transAmount').value),
+               desc: document.getElementById('transDesc').value,
+               category: document.getElementById('transCategory').value,
+               necessity: document.getElementById('transNecessity').checked
+           };
+           state.transactions.unshift(newTrans);
+           e.target.reset();
+           transTypeInput.dispatchEvent(new Event('change')); // reset UI
+           updateAll();
+       });
+
+
+       // Add Task
+       document.getElementById('addTaskForm').addEventListener('submit', (e) => {
+           e.preventDefault();
+           const newTask = {
+               id: Date.now(),
+               desc: document.getElementById('newTaskDesc').value,
+               phase: document.getElementById('newTaskPhase').value,
+               done: false
+           };
+           state.tasks.push(newTask);
+           e.target.reset();
+           renderTasks();
+       });
+
+
+       // Delete Transaction
+       function deleteTransaction(id) {
+           state.transactions = state.transactions.filter(t => t.id !== id);
+           updateAll();
+       }
+
+
+       // Toggle Task
+       function toggleTask(id) {
+           const task = state.tasks.find(t => t.id === id);
+           if(task) task.done = !task.done;
+           renderTasks();
+       }
+
+
+
+
+       function formatMoney(amount) {
+           return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);
+       }
+
+
+       function updateSummary() {
+           const income = state.transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+           const expense = state.transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+           const profit = income - expense;
+          
+           totalIncomeDisplay.innerText = formatMoney(income);
+           totalExpenseDisplay.innerText = formatMoney(expense);
+           netProfitDisplay.innerText = formatMoney(profit);
+          
+           // Color logic for profit
+           netProfitDisplay.className = `text-2xl font-bold ${profit >= 0 ? 'text-emerald-600' : 'text-red-500'}`;
+          
+           // ROI calculation
+           const roi = expense > 0 ? ((profit / expense) * 100).toFixed(1) : 0;
+           roiDisplay.innerText = `${roi}%`;
+       }
+
+
+       function renderLedger() {
+           const list = document.getElementById('transactionList');
+           list.innerHTML = state.transactions.map(t => `
+               <div class="flex justify-between items-center bg-white p-3 rounded shadow-sm border border-gray-50 hover:bg-gray-50 transition group">
+                   <div class="flex items-center gap-3">
+                       <div class="w-8 h-8 rounded-full flex items-center justify-center ${t.type === 'income' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'}">
+                           <i class="fa-solid ${t.type === 'income' ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down'} text-xs"></i>
+                       </div>
+                       <div>
+                           <p class="text-sm font-semibold text-gray-800">${t.desc}</p>
+                           <div class="flex items-center gap-2 text-xs text-gray-500">
+                               <span>${t.category}</span>
+                               ${t.type === 'expense' ?
+                                   (t.necessity ? '<span class="bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded text-[10px]">Necessity</span>' :
+                                   '<span class="bg-gray-200 text-gray-700 px-1.5 py-0.5 rounded text-[10px]">Optional</span>') : ''}
+                           </div>
+                       </div>
+                   </div>
+                   <div class="flex items-center gap-4">
+                       <span class="font-bold ${t.type === 'income' ? 'text-emerald-600' : 'text-red-600'}">
+                           ${t.type === 'income' ? '+' : '-'}${formatMoney(t.amount)}
+                       </span>
+                       <button onclick="deleteTransaction(${t.id})" class="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition">
+                           <i class="fa-solid fa-trash-can"></i>
+                       </button>
+                   </div>
+               </div>
+           `).join('');
+       }
+
+
+       function renderTasks() {
+           const columnsContainer = document.getElementById('taskColumns');
+           const phases = ['Concept', 'Legal', 'Logistics', 'Event Day'];
+          
+           columnsContainer.innerHTML = phases.map(phase => {
+               const phaseTasks = state.tasks.filter(t => t.phase === phase);
+               const taskHTML = phaseTasks.map(t => `
+                   <div class="flex items-start gap-2 p-2 hover:bg-gray-50 rounded transition cursor-pointer" onclick="toggleTask(${t.id})">
+                       <input type="checkbox" class="mt-1 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer" ${t.done ? 'checked' : ''} onclick="event.stopPropagation(); toggleTask(${t.id})">
+                       <span class="text-sm ${t.done ? 'line-through text-gray-400' : 'text-gray-700'}">${t.desc}</span>
+                   </div>
+               `).join('');
+
+
+               return `
+                   <div class="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                       <h4 class="font-semibold text-indigo-900 mb-3 border-b border-gray-200 pb-2">${phase}</h4>
+                       <div class="space-y-1">
+                           ${taskHTML || '<p class="text-xs text-gray-400 italic px-2">No tasks yet</p>'}
+                       </div>
+                   </div>
+               `;
+           }).join('');
+       }
+
+
+       function updateCharts() {
+           // 1. Necessity Doughnut Chart Data Preparation
+           const expenses = state.transactions.filter(t => t.type === 'expense');
+           const necessities = expenses.filter(t => t.necessity).reduce((sum, t) => sum + t.amount, 0);
+           const optional = expenses.filter(t => !t.necessity).reduce((sum, t) => sum + t.amount, 0);
+
+
+           if (necessityChartInstance) necessityChartInstance.destroy();
+          
+           const ctxDonut = document.getElementById('necessityChart').getContext('2d');
+           necessityChartInstance = new Chart(ctxDonut, {
+               type: 'doughnut',
+               data: {
+                   labels: ['Necessities (Must Have)', 'Optional (Nice to Have)'],
+                   datasets: [{
+                       data: [necessities, optional],
+                       backgroundColor: ['#4f46e5', '#cbd5e1'],
+                       borderWidth: 0
+                   }]
+               },
+               options: {
+                   responsive: true,
+                   maintainAspectRatio: false,
+                   plugins: { legend: { position: 'bottom', labels: { boxWidth: 12 } } },
+                   cutout: '70%'
+               }
+           });
+
+
+           // 2. Category Bar Chart Data Preparation
+           const categories = ['Logistics', 'Marketing', 'Legal', 'F&B', 'Merch', 'Ticketing'];
+           const incomeData = categories.map(cat =>
+               state.transactions.filter(t => t.category === cat && t.type === 'income').reduce((sum, t) => sum + t.amount, 0)
+           );
+           const expenseData = categories.map(cat =>
+               state.transactions.filter(t => t.category === cat && t.type === 'expense').reduce((sum, t) => sum + t.amount, 0)
+           );
+
+
+           if (categoryChartInstance) categoryChartInstance.destroy();
+
+
+           const ctxBar = document.getElementById('categoryChart').getContext('2d');
+           categoryChartInstance = new Chart(ctxBar, {
+               type: 'bar',
+               data: {
+                   labels: categories,
+                   datasets: [
+                       { label: 'Income', data: incomeData, backgroundColor: '#10b981', borderRadius: 4 },
+                       { label: 'Expense', data: expenseData, backgroundColor: '#ef4444', borderRadius: 4 }
+                   ]
+               },
+               options: {
+                   responsive: true,
+                   maintainAspectRatio: false,
+                   scales: {
+                       y: { beginAtZero: true, grid: { borderDash: [2, 4], color: '#f3f4f6' } },
+                       x: { grid: { display: false } }
+                   },
+                   plugins: { legend: { position: 'top', align: 'end', labels: { boxWidth: 12 } } }
+               }
+           });
+       }
+
+
+       function updateAll() {
+           updateSummary();
+           renderLedger();
+           updateCharts();
+           renderTasks();
+       }
+
+
+       // Initialize App
+       window.onload = () => {
+           updateAll();
+       };
+   </script>
+</body>
+</html>
+
